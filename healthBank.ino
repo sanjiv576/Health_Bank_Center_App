@@ -18,7 +18,7 @@ void setup() {
   pinMode(positiveLO, INPUT);
   // Setup for leads off detection LO -
   pinMode(negativeLO, INPUT);
-  Serial.println("Code Strated");
+  Serial.println('Code Strated');
 
 }
 
@@ -34,13 +34,13 @@ void readTempHumi() {
   humi = dht.readHumidity();
 
   if (isnan(temp) || isnan(humi)) {
-    Serial.println("Humidity and Temperature are not detected");
+    Serial.println('Humidity and Temperature are not detected');
   }
   else {
-    Serial.print("Temperature in C ");
+    Serial.print('Temperature in C ');
     Serial.println(temp);
 
-    Serial.print("Humidity ");
+    Serial.print('Humidity ');
     Serial.println(humi);
     delay(2000);
   }
