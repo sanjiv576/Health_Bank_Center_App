@@ -1,16 +1,146 @@
 
-
+// for web server
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
 
+#include <DHT.h>
+
+#define DHTPIN 5
+#define DHTTYPE DHT22
+
+float temp, humi;
+// setting low-level interrupts to get more accurate BPM using pulse sensor
+#define USE_ARDUINO_INTERRUPTS true
+
+// import pulse sensor library
+#include <PulseSensorPlayground.h>
+
 const char *ssid = "SS_wlink_2.4";
 const char *password = "@74NePaL#64!";
 
 WebServer server(80);
+// pulse
+const int pulseWirePin = 35;
+
+const int thresholdVal = 50;
 
 const int led = 13;
+
+int heartBeatVal = 0;
+// creating object
+PulseSensorPlayground pulseSensor;
+
+
+
+void setup(void) {
+
+  digitalWrite(led, 0);
+  Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  Serial.println("");
+
+  //  temperature and humidity
+  Serial.println("Code started");
+
+
+  //  setupPulse();
+  pinMode(pulseWirePin, INPUT);
+  //  configuring the pulse sensor object by passing our variables
+  pulseSensor.analogInput(pulseWirePin);
+
+  //  turning on the esp32 led
+  pulseSensor.blinkOnPulse(led);
+
+  //  configuring threshold value for the pulse senosr
+  pulseSensor.setThreshold(thresholdVal);
+
+  // checking whether pulse sensor is working or not
+
+  if (pulseSensor.begin()) {
+
+    Serial.println("Analyzing the heart beat ");
+  }
+
+
+
+  // Wait for connection
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("");
+  Serial.print("Connected to ");
+  Serial.println(ssid);
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+
+  if (MDNS.begin("esp32")) {
+    Serial.println("MDNS responder started");
+  }
+
+  server.on("/", handleRoot);
+
+  server.onNotFound(handleNotFound);
+
+  server.begin();
+  Serial.println("HTTP server started");
+}
+
+void loop(void) {
+  // get patient heart beat using pulse sensor
+  checkHeartBeat();
+  temp = dht.readTemperature();
+  humi = dht.readHumidity();
+
+  Serial.print("Temperature : ");
+  Serial.println(temp);
+  server.handleClient();
+  delay(2);//allow the cpu to switch to other tasks
+}
+
+
+
+
+// ------------- functions -----------------
+
+void setupPulse() {
+  pinMode(pulseWirePin, INPUT);
+  //  configuring the pulse sensor object by passing our variables
+  pulseSensor.analogInput(pulseWirePin);
+
+  //  turning on the esp32 led
+  pulseSensor.blinkOnPulse(led);
+
+  //  configuring threshold value for the pulse senosr
+  pulseSensor.setThreshold(thresholdVal);
+
+  // checking whether pulse sensor is working or not
+
+  if (pulseSensor.begin()) {
+
+    Serial.println("Analyzing the heart beat ");
+  }
+}
+
+
+void checkHeartBeat() {
+
+  //  get the heart beat value
+  int bpm = pulseSensor.getBeatsPerMinute();
+
+  //   check whether the patient holding the sensor
+  if (pulseSensor.sawStartOfBeat()) {
+
+    Serial.print("Heart Beat : ");
+    Serial.println(bpm);
+  }
+}
+
+
 
 void handleRoot() {
 
@@ -74,39 +204,4 @@ void handleNotFound() {
 
   server.send(404, "text/plain", message);
 
-}
-
-void setup(void) {
-  digitalWrite(led, 0);
-  Serial.begin(115200);
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  Serial.println("");
-
-  // Wait for connection
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("");
-  Serial.print("Connected to ");
-  Serial.println(ssid);
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
-
-  if (MDNS.begin("esp32")) {
-    Serial.println("MDNS responder started");
-  }
-
-  server.on("/", handleRoot);
-
-  server.onNotFound(handleNotFound);
-  server.begin();
-  Serial.println("HTTP server started");
-}
-
-void loop(void) {
-  server.handleClient();
-  delay(2);//allow the cpu to switch to other tasks
 }
