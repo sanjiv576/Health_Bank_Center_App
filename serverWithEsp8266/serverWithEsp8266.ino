@@ -1,4 +1,5 @@
 
+#define BLYNK_PRINT Serial
 #include <ESP8266WiFi.h>
 #include <DHT.h>
 
@@ -11,14 +12,17 @@ DHT dht(DHTPIN, DHTTYPE);
 float temp, humi;
 float prevTemp, prevHumi;
 
-
+float bodyTemp;
+int gasValue, val;
+// D3 = 2
+const int buzzerPin = 2;
 double adc_volt;
 // D0 = 16, D1 = 5, D2 = 4
 const int negativeLo = 5, positiveLo = 4;
 
 // variables for health test and results
 int heartBeat, prevHeartBeat, actualHeartBeat;
-String heartBeatMsg = "", heartBeatSugg = "", tempMsg = "";
+String heartBeatMsg = "", heartBeatSugg = "", tempMsg = "", gasValueMsg = "", bodyTempMsg = "";
 
 // leds initilizations
 
@@ -42,8 +46,9 @@ void setup()
   pinMode(redLed, OUTPUT);
   pinMode(yellowLed, OUTPUT);
   pinMode(greenLed, OUTPUT);
+  pinMode(buzzerPin, OUTPUT);
 
-  Serial.begin(115200);
+  Serial.begin(9600);
 
   // connect with wifi network
   connectNetwork();
@@ -56,12 +61,17 @@ void setup()
 
 void loop()
 {
+  digitalWrite(buzzerPin, LOW);
   // measure room tempearture and humidity
 
   temp = dht.readTemperature();
   humi = dht.readHumidity();
 
+  // here, comes Body temperature and air quality values
+  val = Serial.read();
+  // Serial.println(val);
 
+  readGasValue();
 
   // measure heart beat rate
 
@@ -108,6 +118,15 @@ void loop()
   Serial.println(heartBeatSugg);
   Serial.print("Show -----------> Temperature Messsage  : ");
   Serial.println(tempMsg);
+
+  Serial.print("Show =====-> Air Gas Quality  : ");
+  Serial.println(gasValue);
+  Serial.print("Show -----------> Air Gas Messsage  : ");
+  Serial.println(gasValueMsg);
+  Serial.print("Show =====> Body temperature  : ");
+  Serial.println(bodyTemp);
+  Serial.print("Show -----------> Body Messsage  : ");
+  Serial.println(bodyTempMsg);
 
 
   //  check client side server is availabe or not
@@ -189,7 +208,32 @@ void showGUI( float temp, float humi, int heartBeat, String heartBeatMsg, String
 
   gui += "</label></div><div class='suggestion'><label for='' class='text-center'>";
 
+
   gui += "---";
+
+
+
+  //  added from here
+
+  gui += "</label></div></div>";
+  gui += "<div class='health-status'> <div class='health-image'><img src='https://cdn-icons-png.flaticon.com/128/5021/5021115.png' alt='' class='img-fluid'></div><div class='reading text-center'><h1>";
+  gui += bodyTemp;
+
+  gui += "ºC </h1></div><div class='message'><label for='' class='text-center'>";
+  gui += bodyTempMsg;
+
+  gui += "</label></div><div class='suggestion'><label for='' class='text-center'>";
+  gui += "---";
+
+  gui += "</label></div></div><div class='health-status'> <div class='health-image'><img src='https://cdn-icons-png.flaticon.com/128/4455/4455412.png' alt=''  class='img-fluid'></div><div class='reading text-center'><h1 class='text-center'>";
+  gui += gasValue;
+
+  gui += "gm<sup>-3</sup></h1> </div> <div class='message'><label for='' class='text-center'>";
+  gui += gasValueMsg;
+
+  gui += "</label></div> <div class='suggestion'><label for='' class='text-center'>";
+  gui += "---";
+  gui += "</label></div></div>";
 
   gui += "</label></div> </div></div><div class='sendResult'><br><form action='' class='form-group userForm'>   <div><input class='form-input' type='email' placeholder='Enter your email' name='' required></div> <div ><button class='btn btn-primary' type='submit' >Send Result</button></div></form><br></div></div><footer>&copy; Bank Health Center</footer></body></html>";
   client.print(gui);
@@ -216,6 +260,11 @@ int readHeartBeat() {
     adc_volt =  heartBeat * (4.096 / 32768.0);
 
     heartBeat = random(65, 95);
+    bodyTemp = random(34.00, 38.00);
+
+    digitalWrite(buzzerPin, HIGH);
+    delay(2000);
+    digitalWrite(buzzerPin, LOW);
 
 
     //  convert ADC value measured into mV into equivalent heart beat in volt
@@ -308,6 +357,36 @@ void healthMessages() {
   }
   else {
     tempMsg = "NA";
+  }
+
+
+  if (gasValue <= 400 && gasValue >= 350) {
+    gasValueMsg = " Good for health";
+  }
+  else if (gasValue >= 750 && gasValue <= 1200) {
+    gasValueMsg = "Mild harmful gases";
+  }
+  else {
+    gasValueMsg = "Moderate air quatlity";
+  }
+
+
+  if (bodyTemp <= 37 && bodyTemp >= 35.5) {
+    bodyTempMsg = "Normal body temperature";
+  }
+  else if (bodyTemp < 35.5) {
+    bodyTempMsg = "Low Body temperature";
+  }
+
+
+
+}
+
+void readGasValue() {
+
+  gasValue = random(350, 755);
+  if (bodyTemp == 0.00) {
+    bodyTempMsg = "No tested";
   }
 
 }
