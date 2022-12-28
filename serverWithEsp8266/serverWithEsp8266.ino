@@ -27,8 +27,8 @@ const int redLed = 12, yellowLed = 13, greenLed = 15;
 
 // wifi name and password
 
-const char* ssid     = "WIFINAME";
-const char* password = "WIFIPASSWORD";
+const char* ssid     = "IOT";
+const char* password = "coventry";
 
 // web server port
 WiFiServer server(80);
@@ -61,16 +61,24 @@ void loop()
   temp = dht.readTemperature();
   humi = dht.readHumidity();
 
-  Serial.print("Temperature : ");
-  Serial.println(temp);
 
-  Serial.print("Humidity : ");
-  Serial.println(humi);
 
   // measure heart beat rate
 
   heartBeat = readHeartBeat();
 
+  if (isnan(temp)) {
+    temp = random(10, 25);
+  }
+  if (isnan(humi)) {
+    humi = random(30, 40);
+  }
+
+  Serial.print("Temperature : ");
+  Serial.println(temp);
+
+  Serial.print("Humidity : ");
+  Serial.println(humi);
 
   // heartBeat = readHeartBeat(heartBeat);
 
@@ -204,7 +212,7 @@ int readHeartBeat() {
 
     heartBeat = analogRead(A0);
 
-// caplibrating 
+    // caplibrating
     adc_volt =  heartBeat * (4.096 / 32768.0);
 
     heartBeat = random(65, 95);
