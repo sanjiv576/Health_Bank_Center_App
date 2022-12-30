@@ -27,7 +27,7 @@ String heartBeatMsg = "", heartBeatSugg = "", tempMsg = "", gasValueMsg = "", bo
 // leds initilizations
 
 // D6 = 12, D7 = 13, D8 = 15
-const int redLed = 12, yellowLed = 13, greenLed = 15;
+const int redLed = 13, yellowLed = 12, greenLed = 15;
 
 // wifi name and password
 
