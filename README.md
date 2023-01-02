@@ -22,7 +22,7 @@ Provide the current health status and the surrounding.
 *** 
 
 
-**Team Members:**
+# Team Members
 
 **Batch : 30 B (Computing)**
 1. Manisha Kumari Tharu [11781453]
@@ -31,5 +31,5 @@ Provide the current health status and the surrounding.
 4. Parash Ayer [117822704]
 5. Sanjiv Shrestha [11782461]
 
-*Note:* Above given information are name and coveintry ID.
+*Note:* Above given information are name and coventry ID.
 ***
